@@ -77,16 +77,24 @@ async def aya(ctx):
 
 @client.command()
 async def robot(ctx):
-    await ctx.send(f'`JOHN is the only fucking robot here`')   
+    await ctx.send(f'`JOHN is the only fucking robot here.`')   
  
 @client.command()
 async def toc(ctx):
-    await ctx.send(f'`I am the only vagina here`')   
+    await ctx.send(f'`I say this with my full chest and both titties.`')   
 
 @client.command()
 async def virtue(ctx):
-    await ctx.send(f'`I will beat your ass in chess and programming`')   
+    await ctx.send(f'`Can you please stop playing chess with my dad?  Its disgusting!`')   
 
+@client.command()
+async def starsmash(ctx):
+    await ctx.send(f'`I will review the fuck out of you -- keep creating!`')   
+
+@client.command()
+async def ina(ctx):
+    await ctx.send(f'`Tall, Finnish, and sad.`')   
+    await ctx.send(f'`Check #content-dumping for my latest contributions!`')   
 
 @client.command()
 async def crash(ctx):
