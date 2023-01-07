@@ -117,7 +117,7 @@ async def summary(ctx):
         src_x.append(message.content + "\n")
         #src_x.append(message.jump_url + "\n")
         
- 
+        
     await ctx.send(summarize("".join(src_x), 0.25))
  
  
