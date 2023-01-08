@@ -50,7 +50,7 @@ config = json.loads(config_file.read())
  
 # Creating Client
 intents = discord.Intents.default()
-intents.message_content = True
+intents.messages = True
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
  
 # Loading
