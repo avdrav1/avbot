@@ -20,6 +20,7 @@ MarkupSafe==2.1.1
 multidict==6.0.4
 murmurhash==1.0.9
 numpy==1.21.6
+obliquestrategies==0.3
 packaging==22.0
 pathy==0.10.1
 preshed==3.0.8

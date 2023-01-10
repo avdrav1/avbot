@@ -9,7 +9,9 @@ import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from string import punctuation
 from heapq import nlargest
- 
+
+from obliquestrategies import get_strategy
+
 # Summarise Function
  
 def summarize(text, per):
@@ -105,6 +107,9 @@ async def crash(ctx):
 async def dol(ctx):
     await ctx.send(f'`Shit hit the fan, in America.`')   
 
+@client.command()
+async def oblique(ctx):
+    await ctx.send(f'`{get_strategy()}`')   
 
 @client.command()
 async def summary(ctx):
