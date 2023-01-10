@@ -81,9 +81,11 @@ async def oblique(ctx):
 @client.command()
 async def goodreads(ctx, search_arg):
     result = quote(search_arg, limit=1)
-    print(result)
-    await ctx.send(f'`{result}`')
- 
+    json_quote = json.loads(json.dumps(result[0]))
+    goodreads_quote = json_quote["quote"]
+    author = json_quote["author"]
+    await ctx.send(f'```{goodreads_quote}```')
+    await ctx.send(f'***{author}***')
  
 #Tasks
 @tasks.loop(minutes=60)
