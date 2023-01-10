@@ -4,48 +4,11 @@ from discord.ext import commands, tasks
  
 from datetime import date
 from datetime import timedelta
+from datetime import datetime
  
-import spacy
-from spacy.lang.en.stop_words import STOP_WORDS
-from string import punctuation
-from heapq import nlargest
-
 from obliquestrategies import get_strategy
+from quote import quote
 
-# Summarise Function
- 
-def summarize(text, per):
-    nlp = spacy.load('en_core_web_sm')
-    doc= nlp(text)
-    tokens=[token.text for token in doc]
-    word_frequencies={}
-    for word in doc:
-        if word.text.lower() not in list(STOP_WORDS):
-            if word.text.lower() not in punctuation:
-                if word.text not in word_frequencies.keys():
-                    word_frequencies[word.text] = 1
-                else:
-                    word_frequencies[word.text] += 1
-    max_frequency=max(word_frequencies.values())
-    for word in word_frequencies.keys():
-        word_frequencies[word]=word_frequencies[word]/max_frequency
-    sentence_tokens= [sent for sent in doc.sents]
-    sentence_scores = {}
-    for sent in sentence_tokens:
-        for word in sent:
-            if word.text.lower() in word_frequencies.keys():
-                if sent not in sentence_scores.keys():
-                    sentence_scores[sent]=word_frequencies[word.text.lower()]
-                else:
-                    sentence_scores[sent]+=word_frequencies[word.text.lower()]
-    select_length=int(len(sentence_tokens)*per)
-    summary=nlargest(select_length, sentence_scores,key=sentence_scores.get)
-    final_summary=[word.text for word in summary]
-    summary=''.join(final_summary)
-    print(summary)
-    return summary
- 
- 
 # Loading Config
 config_file = open("config.json", "r")
 config = json.loads(config_file.read())
@@ -61,7 +24,8 @@ async def on_ready():
     print('Connected to bot: {}'.format(client.user.name))
     print('Bot ID: {}'.format(client.user.id))
  
-    #send_ping.start()
+    if not send_strategy.is_running():
+        send_strategy.start() 
  
 # Commands
 @client.command()
@@ -102,28 +66,23 @@ async def ina(ctx):
 async def crash(ctx):
     await ctx.send(f'`I am a guitar playing Texan.`')   
 
-
 @client.command()
 async def dol(ctx):
     await ctx.send(f'`Shit hit the fan, in America.`')   
+
+@client.command()
+async def quin(ctx):
+    await ctx.send(f'`The mighty eskimo!`')   
 
 @client.command()
 async def oblique(ctx):
     await ctx.send(f'`{get_strategy()}`')   
 
 @client.command()
-async def summary(ctx):
-    channel = client.get_channel(ctx.channel.id)
-    yesterday = date.today() - timedelta(days = 1)
- 
-    src_x = []
-    async for message in channel.history(limit=20):
-        src_x.append("***"+message.author.name + "***" + "\n")
-        src_x.append(message.content + "\n")
-        #src_x.append(message.jump_url + "\n")
-        
-        
-    await ctx.send(summarize("".join(src_x), 0.25))
+async def goodreads(ctx, search_arg):
+    result = quote(search_arg, limit=1)
+    print(result)
+    await ctx.send(f'`{result}`')
  
  
 #Tasks
@@ -131,5 +90,17 @@ async def summary(ctx):
 async def send_ping():
     channel = client.get_channel(config["home_channel"])
     await channel.send(f'Pong! In {round(client.latency * 1000)}ms')
+
+@tasks.loop(seconds=60)
+async def send_strategy():
+    channel = client.get_channel(config["home_channel"])
+    last_message = []
+    async for message in channel.history(limit=1):
+        last_message_timestamp = message.created_at
+        sixty_minutes_ago = datetime.now() - timedelta(minutes=60)
+        if last_message_timestamp < sixty_minutes_ago:
+            await channel.send(f'`{get_strategy()}`')
  
+
+
 client.run(config["token"])
