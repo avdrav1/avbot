@@ -1,5 +1,8 @@
-import discord
+import sys
 import json
+import discord
+import spotipy
+
 from discord.ext import commands, tasks
  
 from datetime import date
@@ -10,13 +13,14 @@ from obliquestrategies import get_strategy
 from quote import quote
 from dadjokes import Dadjoke
 from newsapi import NewsApiClient
+from spotipy.oauth2 import SpotifyClientCredentials
 
 
 # Loading Config
 config_file = open("config.json", "r")
 config = json.loads(config_file.read())
  
-# Creating Client
+# Creating Discord Client
 intents = discord.Intents.default()
 intents.messages = True
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
@@ -24,6 +28,9 @@ client = commands.Bot(command_prefix=config["prefix"], intents=intents)
 #Initialize NewsApi
 newsapi = NewsApiClient(api_key=config["news_api_key"])
 
+#Initialize Spotify
+sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=config["spotipy_client_id"],
+                                                           client_secret=config["spotipy_client_secret"]))
 
 # Loading
 @client.event
@@ -122,6 +129,21 @@ async def newssources(ctx):
 async def joke(ctx):
     dadjoke = Dadjoke()
     await ctx.send(f'```{dadjoke.joke}```')
+
+@client.command()
+async def artist(ctx, artistname):
+    if artistname is None:
+        artistname = "Radiohead"
+    else:
+        pass
+
+    results = sp.search(q='artist:'+artistname, type='artist')
+    print(results)
+    items = results['artists']['items']
+    if len(items) > 0:
+        artist = items[0]
+        await ctx.send(f"{artist['images'][0]['url']}")
+
 
 #Tasks
 @tasks.loop(minutes=60)
