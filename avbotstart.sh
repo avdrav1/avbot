@@ -1,0 +1,1 @@
+pm2 start avbot.py --name "avbot" --interpreter python3 --watch
