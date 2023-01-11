@@ -8,6 +8,8 @@ from datetime import datetime
  
 from obliquestrategies import get_strategy
 from quote import quote
+from newsapi import NewsApiClient
+
 
 # Loading Config
 config_file = open("config.json", "r")
@@ -18,6 +20,10 @@ intents = discord.Intents.default()
 intents.messages = True
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
  
+#Initialize NewsApi
+newsapi = NewsApiClient(api_key=config["news_api_key"])
+
+
 # Loading
 @client.event
 async def on_ready():
@@ -87,6 +93,25 @@ async def goodreads(ctx, search_arg):
     await ctx.send(f'```{goodreads_quote}```')
     await ctx.send(f'***{author}***')
  
+@client.command()
+async def news(ctx, search_arg):
+    top_headlines = newsapi.get_top_headlines(q=search_arg,
+                                          sources='bbc-news, abc-news, al-jazeera-english, ars-technica, associated-press, axios, bbc-sport, bloomberg, cbc-news, cbs-news, buzzfeed, cnn, espn, fox-news, fox-sports, google-news, hacker-news, mashable, myv-news, nbc-news, newsweek, politico, reddit-r-all, techcrunch, the-globe-and-mail, the-washington-post, the-wall-street-journal, wired',
+                                          language='en')
+                                          
+    json_headlines = json.loads(json.dumps(top_headlines["articles"]))
+    for h in json_headlines:
+        await ctx.send(h["title"])
+        await ctx.send(h["url"])
+
+@client.command()
+async def newssources(ctx):
+    sources = newsapi.get_sources()
+    json_sources = json.loads(json.dumps(sources["sources"]))
+    #print (json_sources)
+    for s in json_sources:
+        print(s["id"])
+
 #Tasks
 @tasks.loop(minutes=60)
 async def send_ping():

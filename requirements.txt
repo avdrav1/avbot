@@ -20,6 +20,7 @@ langcodes==3.3.0
 MarkupSafe==2.1.1
 multidict==6.0.4
 murmurhash==1.0.9
+newsapi-python==0.2.6
 numpy==1.21.6
 obliquestrategies==0.3
 packaging==22.0
