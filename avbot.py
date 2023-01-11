@@ -8,6 +8,7 @@ from datetime import datetime
  
 from obliquestrategies import get_strategy
 from quote import quote
+from dadjokes import Dadjoke
 from newsapi import NewsApiClient
 
 
@@ -98,11 +99,16 @@ async def news(ctx, search_arg):
     top_headlines = newsapi.get_top_headlines(q=search_arg,
                                           sources='bbc-news, abc-news, al-jazeera-english, ars-technica, associated-press, axios, bbc-sport, bloomberg, cbc-news, cbs-news, buzzfeed, cnn, espn, fox-news, fox-sports, google-news, hacker-news, mashable, myv-news, nbc-news, newsweek, politico, reddit-r-all, techcrunch, the-globe-and-mail, the-washington-post, the-wall-street-journal, wired',
                                           language='en')
-                                          
-    json_headlines = json.loads(json.dumps(top_headlines["articles"]))
-    for h in json_headlines:
-        await ctx.send(h["title"])
-        await ctx.send(h["url"])
+    print(top_headlines)                                      
+    totalResults = top_headlines["totalResults"]
+    if totalResults > 0:   
+        await ctx.send(f'Total Headlines: {totalResults}')
+        json_headlines = json.loads(json.dumps(top_headlines["articles"]))
+        for h in json_headlines:
+            print(h)
+            await ctx.send(f'```{h["title"]}```{h["url"]}')
+    else:
+        await ctx.send(f"No headlines found for {search_arg}")
 
 @client.command()
 async def newssources(ctx):
@@ -111,6 +117,11 @@ async def newssources(ctx):
     #print (json_sources)
     for s in json_sources:
         print(s["id"])
+
+@client.command()
+async def joke(ctx):
+    dadjoke = Dadjoke()
+    await ctx.send(f'```{dadjoke.joke}```')
 
 #Tasks
 @tasks.loop(minutes=60)
@@ -121,7 +132,6 @@ async def send_ping():
 @tasks.loop(seconds=60)
 async def send_strategy():
     channel = client.get_channel(config["home_channel"])
-    last_message = []
     async for message in channel.history(limit=1):
         last_message_timestamp = message.created_at
         sixty_minutes_ago = datetime.now() - timedelta(minutes=60)

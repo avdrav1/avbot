@@ -9,6 +9,7 @@ charset-normalizer==2.1.1
 click==8.1.3
 confection==0.0.3
 cymem==2.0.7
+dadjokes==1.3.2
 discord==1.7.3
 discord.py==1.7.3
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.1/en_core_web_sm-3.4.1-py3-none-any.whl
