@@ -2,6 +2,8 @@ import sys
 import json
 import discord
 import spotipy
+import asyncpraw
+
 
 from discord.ext import commands, tasks
  
@@ -31,6 +33,13 @@ newsapi = NewsApiClient(api_key=config["news_api_key"])
 #Initialize Spotify
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=config["spotipy_client_id"],
                                                            client_secret=config["spotipy_client_secret"]))
+
+#Initialize PRAW (Reddit)
+red = asyncpraw.Reddit(
+    client_id=config["reddit_client_id"],
+    client_secret=config["reddit_client_secret"],
+    user_agent="avbot user agent",
+)
 
 # Loading
 @client.event
@@ -144,6 +153,20 @@ async def artist(ctx, artistname):
         artist = items[0]
         await ctx.send(f"{artist['images'][0]['url']}")
 
+@client.command()
+async def reddit(ctx, subreddit_arg):
+    subreddit = await red.subreddit(subreddit_arg, fetch=True)
+
+    #print(subreddit.display_name)
+    #print(subreddit.title)
+    #print(subreddit.description)
+    
+    async for submission in subreddit.top(limit=3):
+        #print(submission.title)
+        #print(submission.score)
+        #print(submission.id)
+        await ctx.send(f'https://reddit.com/{submission.permalink}')
+    
 
 #Tasks
 @tasks.loop(minutes=60)
