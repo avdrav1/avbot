@@ -1,8 +1,10 @@
 import sys
+import random
 import json
 import discord
 import spotipy
 import asyncpraw
+import pytumblr
 
 
 from discord.ext import commands, tasks
@@ -40,6 +42,15 @@ red = asyncpraw.Reddit(
     client_secret=config["reddit_client_secret"],
     user_agent="avbot user agent",
 )
+
+#Initialize Tumblr
+tum = pytumblr.TumblrRestClient(
+    config["tumblr_client_id"],
+    config["tumblr_client_secret"],
+    config["tumblr_token"],
+    config["tumblr_token_secret"]
+)
+
 
 # Loading
 @client.event
@@ -117,12 +128,16 @@ async def news(ctx, search_arg):
                                           language='en')
     print(top_headlines)                                      
     totalResults = top_headlines["totalResults"]
+    count = 1
     if totalResults > 0:   
-        await ctx.send(f'Total Headlines: {totalResults}')
+        #await ctx.send(f'Total Headlines: {totalResults}')
         json_headlines = json.loads(json.dumps(top_headlines["articles"]))
         for h in json_headlines:
             print(h)
             await ctx.send(f'```{h["title"]}```{h["url"]}')
+            count = count + 1
+            if count > 3:
+                break
     else:
         await ctx.send(f"No headlines found for {search_arg}")
 
@@ -140,34 +155,52 @@ async def joke(ctx):
     await ctx.send(f'```{dadjoke.joke}```')
 
 @client.command()
-async def artist(ctx, artistname):
-    if artistname is None:
-        artistname = "Radiohead"
-    else:
-        pass
-
+async def artist(ctx, artistname="Radiohead"):
     results = sp.search(q='artist:'+artistname, type='artist')
-    print(results)
+    print(json.dumps(results, indent=4))
     items = results['artists']['items']
     if len(items) > 0:
         artist = items[0]
-        await ctx.send(f"{artist['images'][0]['url']}")
+        sp_url = artist['external_urls']['spotify']
+        sp_img = artist['images'][0]['url']
+        sp_genres = artist['genres']
+
+        embed=discord.Embed(title=artistname, url=sp_url, description=sp_genres)
+        embed.set_image(url=sp_img)
+        await ctx.send(embed=embed)
 
 @client.command()
-async def reddit(ctx, subreddit_arg):
+async def reddit(ctx, subreddit_arg, sort="top"):
     subreddit = await red.subreddit(subreddit_arg, fetch=True)
 
     #print(subreddit.display_name)
     #print(subreddit.title)
     #print(subreddit.description)
     
-    async for submission in subreddit.top(limit=3):
-        #print(submission.title)
-        #print(submission.score)
-        #print(submission.id)
-        await ctx.send(f'https://reddit.com/{submission.permalink}')
+    if sort=="top":
+        async for submission in subreddit.top(limit=3):
+            await ctx.send(f'https://reddit.com/{submission.permalink}')
+    elif sort=="hot":
+        async for submission in subreddit.hot(limit=3):
+            await ctx.send(f'https://reddit.com/{submission.permalink}')
+    elif sort=="rising":
+        async for submission in subreddit.rising(limit=3):
+            await ctx.send(f'https://reddit.com/{submission.permalink}')
+    elif sort=="controversial":
+        async for submission in subreddit.controversial(limit=3):
+            await ctx.send(f'https://reddit.com/{submission.permalink}')
+    else:
+        await ctx.send(f'Invalid sort: {sort}')
     
-
+@client.command()
+async def tumblr(ctx, blog_arg):
+    blog_info = tum.blog_info(blog_arg)
+    print(json.dumps(blog_info, indent=4))
+    total_posts= blog_info['blog']['total_posts']
+    posts_json = tum.posts(blog_arg, limit=1, offset=random.randint(1,total_posts), type="photo")
+    image_url = posts_json["posts"][0]["post_url"].strip('\"')
+    await ctx.send(f'{image_url}')
+   
 #Tasks
 @tasks.loop(minutes=60)
 async def send_ping():
