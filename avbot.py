@@ -109,7 +109,11 @@ async def dol(ctx):
 
 @client.command()
 async def quin(ctx):
-    await ctx.send(f'`The mighty eskimo!`')   
+    await ctx.send(f'`The mighty eskimo!`')
+
+@client.command()
+async def soupy(ctx):
+    await ctx.send(f'`Make sex work safe and legalize prostitution, hell yeah!`')          
 
 @client.command()
 async def oblique(ctx):
