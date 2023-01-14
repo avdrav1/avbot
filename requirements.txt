@@ -12,7 +12,9 @@ catalogue==2.0.8
 certifi==2022.12.7
 chardet==4.0.0
 charset-normalizer==2.1.1
+chatGPT @ git+https://github.com/mmabrouk/chatgpt-wrapper@440524e176eaba52514d9a49c84b027416a9f93f
 click==8.1.3
+commonmark==0.9.1
 confection==0.0.3
 cymem==2.0.7
 dadjokes==1.3.2
@@ -21,6 +23,7 @@ discord.py==1.7.3
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.1/en_core_web_sm-3.4.1-py3-none-any.whl
 future==0.18.3
 gazpacho==1.1
+greenlet==2.0.1
 idna==3.4
 importlib-metadata==6.0.0
 Jinja2==3.1.2
@@ -34,13 +37,17 @@ oauthlib==3.2.2
 obliquestrategies==0.3
 packaging==22.0
 pathy==0.10.1
+playwright==1.29.1
 preshed==3.0.8
 pydantic==1.10.2
+pyee==9.0.4
+Pygments==2.14.0
 PyTumblr==0.1.0
 quote==2.0.4
 redis==4.4.1
 requests==2.28.1
 requests-oauthlib==1.3.1
+rich==13.0.1
 six==1.16.0
 smart-open==6.3.0
 spacy==3.4.4

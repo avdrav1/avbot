@@ -6,9 +6,9 @@ import spotipy
 import asyncpraw
 import pytumblr
 
-
 from discord.ext import commands, tasks
- 
+#from chatgpt_wrapper import ChatGPT
+
 from datetime import date
 from datetime import timedelta
 from datetime import datetime
@@ -50,6 +50,9 @@ tum = pytumblr.TumblrRestClient(
     config["tumblr_token"],
     config["tumblr_token_secret"]
 )
+
+#Initialize ChatGPT
+#chatbot = ChatGPT()
 
 
 # Loading
@@ -113,13 +116,17 @@ async def oblique(ctx):
     await ctx.send(f'`{get_strategy()}`')   
 
 @client.command()
-async def goodreads(ctx, search_arg):
-    result = quote(search_arg, limit=1)
-    json_quote = json.loads(json.dumps(result[0]))
-    goodreads_quote = json_quote["quote"]
-    author = json_quote["author"]
-    await ctx.send(f'```{goodreads_quote}```')
-    await ctx.send(f'***{author}***')
+async def goodreads(ctx, search_arg, limit_arg=1):
+    results = quote(search_arg, limit=limit_arg)
+    for r in results:
+        print(r)
+        goodreads_quote = r["quote"]
+        author = r["author"]
+        embed=discord.Embed(title=author, description=goodreads_quote)
+        await ctx.send(embed=embed)
+    
+    #await ctx.send(f'```{goodreads_quote}```')
+    #await ctx.send(f'***{author}***')
  
 @client.command()
 async def news(ctx, search_arg):
@@ -170,7 +177,7 @@ async def artist(ctx, artistname="Radiohead"):
         await ctx.send(embed=embed)
 
 @client.command()
-async def reddit(ctx, subreddit_arg, sort="top"):
+async def reddit(ctx, subreddit_arg, sort="top", limit_arg=1):
     subreddit = await red.subreddit(subreddit_arg, fetch=True)
 
     #print(subreddit.display_name)
@@ -178,28 +185,34 @@ async def reddit(ctx, subreddit_arg, sort="top"):
     #print(subreddit.description)
     
     if sort=="top":
-        async for submission in subreddit.top(limit=3):
+        async for submission in subreddit.top(limit=limit_arg):
             await ctx.send(f'https://reddit.com/{submission.permalink}')
     elif sort=="hot":
-        async for submission in subreddit.hot(limit=3):
+        async for submission in subreddit.hot(limit=limit_arg):
             await ctx.send(f'https://reddit.com/{submission.permalink}')
     elif sort=="rising":
-        async for submission in subreddit.rising(limit=3):
+        async for submission in subreddit.rising(limit=limit_arg):
             await ctx.send(f'https://reddit.com/{submission.permalink}')
     elif sort=="controversial":
-        async for submission in subreddit.controversial(limit=3):
+        async for submission in subreddit.controversial(limit=limit_arg):
+            await ctx.send(f'https://reddit.com/{submission.permalink}')
+    elif sort=="new":
+        async for submission in subreddit.new(limit=limit_arg):
             await ctx.send(f'https://reddit.com/{submission.permalink}')
     else:
         await ctx.send(f'Invalid sort: {sort}')
     
 @client.command()
-async def tumblr(ctx, blog_arg):
+async def tumblr(ctx, blog_arg, limit_arg=1):
     blog_info = tum.blog_info(blog_arg)
-    print(json.dumps(blog_info, indent=4))
-    total_posts= blog_info['blog']['total_posts']
-    posts_json = tum.posts(blog_arg, limit=1, offset=random.randint(1,total_posts), type="photo")
-    image_url = posts_json["posts"][0]["post_url"].strip('\"')
-    await ctx.send(f'{image_url}')
+    #print(json.dumps(blog_info, indent=4))
+    total_posts = blog_info['blog']['total_posts']
+    posts_json = tum.posts(blog_arg, limit=limit_arg, offset=random.randint(1,total_posts), type="photo")
+    #print(json.dumps(posts_json['posts'], indent=4))
+    for p in posts_json['posts']:
+        print(json.dumps(p['post_url'], indent=4))
+        image_url = p["post_url"].strip('\"')
+        await ctx.send(f'{image_url}')
    
 #Tasks
 @tasks.loop(minutes=60)
