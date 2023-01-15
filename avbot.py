@@ -1,31 +1,33 @@
 import sys
 import random
 import json
+import pytz
+
+from datetime import date
+from datetime import timedelta
+from datetime import datetime
+from pytz import timezone
+
 import discord
 import spotipy
 import asyncpraw
 import pytumblr
 
 from discord.ext import commands, tasks
-#from chatgpt_wrapper import ChatGPT
-
-from datetime import date
-from datetime import timedelta
-from datetime import datetime
- 
+from discord import app_commands
+from tinydb import TinyDB, Query
 from obliquestrategies import get_strategy
 from quote import quote
 from dadjokes import Dadjoke
 from newsapi import NewsApiClient
 from spotipy.oauth2 import SpotifyClientCredentials
 
-
 # Loading Config
 config_file = open("config.json", "r")
 config = json.loads(config_file.read())
  
 # Creating Discord Client
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.messages = True
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
  
@@ -51,9 +53,9 @@ tum = pytumblr.TumblrRestClient(
     config["tumblr_token_secret"]
 )
 
-#Initialize ChatGPT
-#chatbot = ChatGPT()
-
+#Initialize DB
+db = TinyDB('avbot.json')
+regulars = ['avdrav', 'aya', 'dol', 'robot', 'toc', 'virtue', 'starsmash', 'ina', 'crash', 'quin', 'soupy']
 
 # Loading
 @client.event
@@ -74,46 +76,27 @@ async def lurk(ctx):
     await ctx.send(f'`We appreciate the lurk!`')
 
 @client.command()
-async def aya(ctx):
-    await ctx.send(f'`MIQ is AOTY`')
-    await ctx.send(f'`Youre a beautiful genius and if you tried at all, its perfect.`')    
+async def listregulars(ctx):
+    await ctx.send(regulars)
 
 @client.command()
-async def robot(ctx):
-    await ctx.send(f'`JOHN is the only fucking robot here.`')   
- 
-@client.command()
-async def toc(ctx):
-    await ctx.send(f'`I say this with my full chest and both titties.`')   
+async def addquote(ctx, name, quote):
+    if name in regulars:
+        db.insert({'name': name, 'quote': quote })
+        await ctx.send(f"{name}'s quote was added!")
+    else:
+        await ctx.send(f"{name} is not a regular!")
 
 @client.command()
-async def virtue(ctx):
-    await ctx.send(f'`Can you please stop playing chess with my dad?  Its disgusting!`')   
-
-@client.command()
-async def starsmash(ctx):
-    await ctx.send(f'`I will review the fuck out of you -- keep creating!`')   
-
-@client.command()
-async def ina(ctx):
-    await ctx.send(f'`Tall, Finnish, and sad.`')   
-    await ctx.send(f'`Check #content-dumping for my latest contributions!`')   
-
-@client.command()
-async def crash(ctx):
-    await ctx.send(f'`I am a guitar playing Texan.`')   
-
-@client.command()
-async def dol(ctx):
-    await ctx.send(f'`Shit hit the fan, in America.`')   
-
-@client.command()
-async def quin(ctx):
-    await ctx.send(f'`The mighty eskimo!`')
-
-@client.command()
-async def soupy(ctx):
-    await ctx.send(f'`Make sex work safe and legalize prostitution, hell yeah!`')          
+async def getquote(ctx, name):
+    if name in regulars:
+        Quote = Query()
+        results = db.search(Quote.name == name)
+        for r in results:
+            print(r)
+            await ctx.send(f"{r['quote']} - {r['name']}")
+    else:
+        await ctx.send(f"{name} is not a regular!")
 
 @client.command()
 async def oblique(ctx):
@@ -123,7 +106,7 @@ async def oblique(ctx):
 async def goodreads(ctx, search_arg, limit_arg=1):
     results = quote(search_arg, limit=limit_arg)
     for r in results:
-        print(r)
+        #print(r)
         goodreads_quote = r["quote"]
         author = r["author"]
         embed=discord.Embed(title=author, description=goodreads_quote)
@@ -214,7 +197,7 @@ async def tumblr(ctx, blog_arg, limit_arg=1):
     posts_json = tum.posts(blog_arg, limit=limit_arg, offset=random.randint(1,total_posts), type="photo")
     #print(json.dumps(posts_json['posts'], indent=4))
     for p in posts_json['posts']:
-        print(json.dumps(p['post_url'], indent=4))
+        #print(json.dumps(p['post_url'], indent=4))
         image_url = p["post_url"].strip('\"')
         await ctx.send(f'{image_url}')
    
@@ -229,7 +212,9 @@ async def send_strategy():
     channel = client.get_channel(config["home_channel"])
     async for message in channel.history(limit=1):
         last_message_timestamp = message.created_at
-        sixty_minutes_ago = datetime.now() - timedelta(minutes=60)
+        sixty_minutes_ago = datetime.now(timezone('UTC')) - timedelta(minutes=60)
+        print(last_message_timestamp)
+        print(sixty_minutes_ago)
         if last_message_timestamp < sixty_minutes_ago:
             await channel.send(f'`{get_strategy()}`')
  
