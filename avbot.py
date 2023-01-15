@@ -64,7 +64,10 @@ async def on_ready():
     print('Bot ID: {}'.format(client.user.id))
  
     if not send_strategy.is_running():
-        send_strategy.start() 
+        print("Starting Obliques")
+        send_strategy.start()
+    else:
+        print("Oblique already running!") 
  
 # Commands
 @client.command()
@@ -116,7 +119,7 @@ async def goodreads(ctx, search_arg, limit_arg=1):
     #await ctx.send(f'***{author}***')
  
 @client.command()
-async def news(ctx, search_arg):
+async def news(ctx, search_arg, limit_arg):
     top_headlines = newsapi.get_top_headlines(q=search_arg,
                                           sources='bbc-news, abc-news, al-jazeera-english, ars-technica, associated-press, axios, bbc-sport, bloomberg, cbc-news, cbs-news, buzzfeed, cnn, espn, fox-news, fox-sports, google-news, hacker-news, mashable, myv-news, nbc-news, newsweek, politico, reddit-r-all, techcrunch, the-globe-and-mail, the-washington-post, the-wall-street-journal, wired',
                                           language='en')
@@ -130,7 +133,7 @@ async def news(ctx, search_arg):
             print(h)
             await ctx.send(f'```{h["title"]}```{h["url"]}')
             count = count + 1
-            if count > 3:
+            if count > limit_arg:
                 break
     else:
         await ctx.send(f"No headlines found for {search_arg}")
