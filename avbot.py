@@ -21,6 +21,7 @@ from quote import quote
 from dadjokes import Dadjoke
 from newsapi import NewsApiClient
 from spotipy.oauth2 import SpotifyClientCredentials
+#from asyncpraw import RedditAPIException
 
 # Loading Config
 config_file = open("config.json", "r")
@@ -30,6 +31,7 @@ config = json.loads(config_file.read())
 intents = discord.Intents.all()
 intents.messages = True
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
+#tree = app_commands.CommandTree(client)
  
 #Initialize NewsApi
 newsapi = NewsApiClient(api_key=config["news_api_key"])
@@ -62,6 +64,9 @@ regulars = ['avdrav', 'aya', 'dol', 'robot', 'toc', 'virtue', 'starsmash', 'ina'
 async def on_ready():
     print('Connected to bot: {}'.format(client.user.name))
     print('Bot ID: {}'.format(client.user.id))
+    
+    #await tree.sync(guild=discord.Object(id=894340446707400704))
+    #print("Ready!")
  
     if not send_strategy.is_running():
         print("Starting Obliques")
@@ -70,6 +75,11 @@ async def on_ready():
         print("Oblique already running!") 
  
 # Commands
+#@tree.command(name = "hello", description = "Say hello to Avbot", guild=discord.Object(id=12417128931))
+#async def hello(interaction):
+#    await interaction.response.send_message("Avbot, ready and waiting...")
+
+
 @client.command()
 async def ping(ctx):
     await ctx.send(f'`Pong! In {round(client.latency * 1000)}ms`')
@@ -168,12 +178,14 @@ async def artist(ctx, artistname="Radiohead"):
 
 @client.command()
 async def reddit(ctx, subreddit_arg, sort="top", limit_arg=1):
+    
+    print("Getting Subreddit: " + subreddit_arg)
     subreddit = await red.subreddit(subreddit_arg, fetch=True)
 
-    #print(subreddit.display_name)
-    #print(subreddit.title)
-    #print(subreddit.description)
-    
+    print(subreddit.display_name)
+    print(subreddit.title)
+    print(subreddit.description)
+
     if sort=="top":
         async for submission in subreddit.top(limit=limit_arg):
             await ctx.send(f'https://reddit.com/{submission.permalink}')
