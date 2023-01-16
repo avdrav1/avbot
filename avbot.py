@@ -22,6 +22,8 @@ from quote import quote
 from dadjokes import Dadjoke
 from newsapi import NewsApiClient
 from spotipy.oauth2 import SpotifyClientCredentials
+from imgurpython import ImgurClient
+
 
 # Loading Config
 config_file = open("config.json", "r")
@@ -56,6 +58,9 @@ tum = pytumblr.TumblrRestClient(
 
 #Initialize Lyrics Genius
 genius = lyricsgenius.Genius(config['genius_token'])
+
+#Initialize imgur
+im = ImgurClient(config['imgur_client_id'], config['imgur_client_secret'])
 
 #Initialize DB
 db = TinyDB('avbot.json')
@@ -227,7 +232,21 @@ async def lyrics(ctx, song_name, artist_name):
             #print(chunk)
             #print(len(chunk))
             await ctx.send(f'```{chunk}```')
-        
+
+@client.command()
+async def imgur(ctx, query, limit_arg=1):
+    total_items = []
+    pages = [1,2,3]
+    for p in pages:
+        items = im.gallery_search(query, page=p)
+        for i in items:
+            print(i.link)
+            total_items.append(i.link)
+    print(len(total_items))    
+    for l in range(0,limit_arg):
+        link = random.choice(total_items)
+        print(link)
+        await ctx.send(link)
 
 #Tasks
 @tasks.loop(minutes=60)
