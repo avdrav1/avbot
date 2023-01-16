@@ -12,6 +12,7 @@ import discord
 import spotipy
 import asyncpraw
 import pytumblr
+import lyricsgenius
 
 from discord.ext import commands, tasks
 from discord import app_commands
@@ -21,7 +22,6 @@ from quote import quote
 from dadjokes import Dadjoke
 from newsapi import NewsApiClient
 from spotipy.oauth2 import SpotifyClientCredentials
-#from asyncpraw import RedditAPIException
 
 # Loading Config
 config_file = open("config.json", "r")
@@ -31,7 +31,6 @@ config = json.loads(config_file.read())
 intents = discord.Intents.all()
 intents.messages = True
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
-#tree = app_commands.CommandTree(client)
  
 #Initialize NewsApi
 newsapi = NewsApiClient(api_key=config["news_api_key"])
@@ -55,6 +54,9 @@ tum = pytumblr.TumblrRestClient(
     config["tumblr_token_secret"]
 )
 
+#Initialize Lyrics Genius
+genius = lyricsgenius.Genius(config['genius_token'])
+
 #Initialize DB
 db = TinyDB('avbot.json')
 regulars = ['avdrav', 'aya', 'dol', 'robot', 'toc', 'virtue', 'starsmash', 'ina', 'crash', 'quin', 'soupy']
@@ -65,9 +67,6 @@ async def on_ready():
     print('Connected to bot: {}'.format(client.user.name))
     print('Bot ID: {}'.format(client.user.id))
     
-    #await tree.sync(guild=discord.Object(id=894340446707400704))
-    #print("Ready!")
- 
     if not send_strategy.is_running():
         print("Starting Obliques")
         send_strategy.start()
@@ -75,10 +74,6 @@ async def on_ready():
         print("Oblique already running!") 
  
 # Commands
-#@tree.command(name = "hello", description = "Say hello to Avbot", guild=discord.Object(id=12417128931))
-#async def hello(interaction):
-#    await interaction.response.send_message("Avbot, ready and waiting...")
-
 
 @client.command()
 async def ping(ctx):
@@ -215,7 +210,25 @@ async def tumblr(ctx, blog_arg, limit_arg=1):
         #print(json.dumps(p['post_url'], indent=4))
         image_url = p["post_url"].strip('\"')
         await ctx.send(f'{image_url}')
-   
+
+def chunkstring(string, length):
+    return (string[0+i:length+i] for i in range(0, len(string), length))
+
+@client.command()
+async def lyrics(ctx, song_name, artist_name):
+    song = genius.search_song(song_name, artist_name)
+    #print(song.lyrics)
+    #print(len(song.lyrics))
+    if len(song.lyrics) <= 2000:
+        await ctx.send(f'```{song.lyrics}```')
+    else:
+        lyrics_chunks = chunkstring(song.lyrics, 1900)
+        for chunk in lyrics_chunks:
+            #print(chunk)
+            #print(len(chunk))
+            await ctx.send(f'```{chunk}```')
+        
+
 #Tasks
 @tasks.loop(minutes=60)
 async def send_ping():
