@@ -243,7 +243,7 @@ async def imgur(ctx, query, limit_arg=1):
             print(i.link)
             total_items.append(i.link)
     print(len(total_items)) 
-    if len(total_items) > 0   
+    if len(total_items) > 0:   
         for l in range(0,limit_arg):
             link = random.choice(total_items)
             print(link)
