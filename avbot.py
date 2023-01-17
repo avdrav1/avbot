@@ -164,7 +164,7 @@ async def joke(ctx):
 @client.command()
 async def artist(ctx, artistname="Radiohead"):
     results = sp.search(q='artist:'+artistname, type='artist')
-    print(json.dumps(results, indent=4))
+    #print(json.dumps(results, indent=4))
     items = results['artists']['items']
     if len(items) > 0:
         artist = items[0]
@@ -175,6 +175,30 @@ async def artist(ctx, artistname="Radiohead"):
         embed=discord.Embed(title=artistname, url=sp_url, description=sp_genres)
         embed.set_image(url=sp_img)
         await ctx.send(embed=embed)
+
+@client.command()
+async def topsongs(ctx, q="Radiohead", limit_arg=1):
+    results = sp.search(q='artist:'+q, type='artist')
+    #print(json.dumps(results, indent=4))
+    items = results['artists']['items']
+    if len(items) > 0:
+        artist_uri = items[0]['uri']
+        artist_name = items[0]['name']
+        print(artist_name+"="+artist_uri)
+    
+    top_tracks = sp.artist_top_tracks(artist_uri)
+    for track in top_tracks['tracks'][:limit_arg]:
+        print
+        track_name = track['name']
+        audio = track['external_urls']['spotify']
+        cover_art = track['album']['images'][0]['url']
+        
+        embed=discord.Embed(title=track_name, url=audio, description=artist_name)
+        embed.set_image(url=cover_art)
+        await ctx.send(embed=embed)
+
+
+
 
 @client.command()
 async def reddit(ctx, subreddit_arg, sort="top", limit_arg=1):
