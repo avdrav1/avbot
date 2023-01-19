@@ -7,6 +7,7 @@ from datetime import date
 from datetime import timedelta
 from datetime import datetime
 from pytz import timezone
+from typing import Literal
 
 import discord
 import spotipy
@@ -129,7 +130,7 @@ async def goodreads(ctx, search_arg, limit_arg=1):
     #await ctx.send(f'***{author}***')
  
 @client.command()
-async def news(ctx, search_arg, limit_arg):
+async def news(ctx, search_arg, limit_arg=1):
     top_headlines = newsapi.get_top_headlines(q=search_arg,
                                           sources='bbc-news, abc-news, al-jazeera-english, ars-technica, associated-press, axios, bbc-sport, bloomberg, cbc-news, cbs-news, buzzfeed, cnn, espn, fox-news, fox-sports, google-news, hacker-news, mashable, myv-news, nbc-news, newsweek, politico, reddit-r-all, techcrunch, the-globe-and-mail, the-washington-post, the-wall-street-journal, wired',
                                           language='en')
@@ -201,32 +202,32 @@ async def topsongs(ctx, q="Radiohead", limit_arg=1):
 
 
 @client.command()
-async def reddit(ctx, subreddit_arg, sort="top", limit_arg=1):
-    
-    print("Getting Subreddit: " + subreddit_arg)
-    subreddit = await red.subreddit(subreddit_arg, fetch=True)
+async def reddit(
+    ctx,
+    subreddit_arg: str,
+    sort: Literal["top", "hot", "rising", "controversial", "new"] = "hot",
+    limit_arg: int = 1
+):
+    async with asyncpraw.Reddit(
+        client_id=config["reddit_client_id"],
+        client_secret=config["reddit_client_secret"],
+        user_agent="avbot user agent",
+    ) as reddit:
+        subreddit = await reddit.subreddit(subreddit_arg, fetch=True)
 
-    print(subreddit.display_name)
-    print(subreddit.title)
-    print(subreddit.description)
+        print(subreddit.display_name)
+        print(subreddit.title)
+        print(subreddit.description)
 
-    if sort=="top":
-        async for submission in subreddit.top(limit=limit_arg):
+        async for submission in getattr(subreddit, sort)(limit=limit_arg):
             await ctx.send(f'https://reddit.com/{submission.permalink}')
-    elif sort=="hot":
-        async for submission in subreddit.hot(limit=limit_arg):
-            await ctx.send(f'https://reddit.com/{submission.permalink}')
-    elif sort=="rising":
-        async for submission in subreddit.rising(limit=limit_arg):
-            await ctx.send(f'https://reddit.com/{submission.permalink}')
-    elif sort=="controversial":
-        async for submission in subreddit.controversial(limit=limit_arg):
-            await ctx.send(f'https://reddit.com/{submission.permalink}')
-    elif sort=="new":
-        async for submission in subreddit.new(limit=limit_arg):
-            await ctx.send(f'https://reddit.com/{submission.permalink}')
+
+@reddit.error
+async def reddit_error(self, context, error):
+    if isinstance(error, commands.BadLiteralArgument):
+        await context.send(f'{context.current_argument} is not a valid sort type.')
     else:
-        await ctx.send(f'Invalid sort: {sort}')
+        await context.send(f'An error occurred: {error}')
     
 @client.command()
 async def tumblr(ctx, blog_arg, limit_arg=1):
