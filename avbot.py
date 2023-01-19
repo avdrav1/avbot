@@ -198,9 +198,6 @@ async def topsongs(ctx, q="Radiohead", limit_arg=1):
         embed.set_image(url=cover_art)
         await ctx.send(embed=embed)
 
-
-
-
 @client.command()
 async def reddit(
     ctx,
